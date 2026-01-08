@@ -1,215 +1,156 @@
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kasir RM JOYO - Rekap Per Nota + Grand Total</title>
+<title>Kasir RM JOYO</title>
 <style>
-body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#000;transition:0.3s;}
-body.dark{background:#121212;color:#eee;}
-.page{display:none;padding:15px;}
-.page.active{display:block;}
-.kasir,.riwayat-container,.rekap-container,.login-container{width:90%;max-width:700px;margin:15px auto;background:#fff;padding:15px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.15);}
-body.dark .kasir,body.dark .riwayat-container,body.dark .rekap-container,body.dark .login-container{background:#1e1e1e;color:#eee;}
-.header{text-align:center;margin-bottom:10px;}
-button{width:100%;padding:10px;margin:5px 0;border:none;border-radius:10px;background:#c62828;color:white;font-size:16px;cursor:pointer;}
-body.dark button{background:#b71c1c;}
-input{width:100%;padding:8px;margin:5px 0;border:1px solid #ccc;border-radius:6px;font-size:14px;}
-body.dark input{background:#333;color:#eee;border-color:#888;}
-.kategori-title{margin:8px 0;font-weight:bold;font-size:18px;color:#333;}
-body.dark .kategori-title{color:#eee;}
-.menu-item{padding:6px 12px;margin-left:20px;border-bottom:1px dashed #ccc;cursor:pointer;display:flex;justify-content:space-between;align-items:center;}
-.menu-item:hover{background:#fafafa;}
-body.dark .menu-item:hover{background:#333;}
-.menu-item span{color:#c62828;font-weight:bold;}
-.order{display:flex;justify-content:space-between;font-size:14px;margin:3px 0;align-items:center;}
-.order span.rp{text-align:right;display:inline-block;min-width:80px;}
-.hapusOrder{margin-left:8px;color:red;cursor:pointer;font-weight:bold;}
-.total{text-align:center;font-weight:bold;font-size:18px;margin-top:10px;}
-#riwayat,#rekapDiv{max-height:400px;overflow:auto;border:1px dashed #ccc;padding:5px;}
-body.dark #riwayat,body.dark #rekapDiv{border-color:#555;}
-#inputMenu{display:flex;gap:6px;margin-bottom:10px;}
-#inputMenu input,#inputMenu select{flex:2 1 120px;padding:6px;border:1px solid #ccc;border-radius:6px;font-size:14px;}
-#inputMenu button{flex:1 1 60px;border:none;background:#2e7d32;color:white;cursor:pointer;border-radius:6px;font-size:14px;}
-body.dark #inputMenu input, body.dark #inputMenu select, body.dark #inputMenu button{border-color:#888;background:#333;color:#eee;}
-body.dark #darkModeBtn{background:#fbc02d;color:#000;}
-hr{border:none;border-top:1px dashed #ccc;}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;color:#000;padding-top:24px;transition:.3s}
+body.dark{background:#121212;color:#eee}
+.page{display:none;padding:15px}
+.page.active{display:block}
+button{width:100%;padding:10px;margin:5px 0;border:none;border-radius:10px;background:#42a5f5;color:#fff;font-size:16px;cursor:pointer}
+body.dark button{background:#1e88e5}
+input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc;font-size:14px}
+body.dark input,body.dark select{background:#333;color:#eee;border-color:#888}
+
+/* CARD / CONTAINER */
+.card{width:90%;max-width:700px;margin:15px auto;background:#fff;padding:15px;border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.15);border:2px solid #42a5f5}
+body.dark .card{background:#1e1e1e;border:2px solid #1e88e5}
+
+.header{text-align:center;margin-bottom:10px}
+/* Judul gradient */
+#displayNamaToko{
+    font-weight:bold;
+    font-size:28px;
+    background: linear-gradient(90deg, #ffffff, #ffeb3b, #e91e63);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align:center;
+}
+
+.kategori{margin:15px 0 5px;font-weight:bold;color:#42a5f5;border-bottom:2px solid #42a5f5;display:inline-block}
+.menu-item{display:flex;justify-content:space-between;align-items:center;padding:6px;background:#f9f9f9;border-radius:8px;margin-bottom:5px}
+body.dark .menu-item{background:#2a2a2a}
+.menu-info{flex:2;display:flex;justify-content:space-between;margin-right:15px;cursor:pointer}
+.del{color:#aaa;font-size:14px;padding:0 8px;cursor:pointer}
+.del:hover{color:red}
+
+/* PESANAN Rapat */
+.order{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #ddd;font-size:14px}
+
+/* MARQUEE / RUNNING TEXT kuning */
+.marquee{position:fixed;top:0;left:0;width:100%;overflow:hidden;white-space:nowrap;font-size:12px;font-weight:bold;background:#000;color:#ffeb3b;z-index:1000}
+.marquee span{display:inline-block;padding-left:100%;animation:jalan 15s linear infinite}
+@keyframes jalan{100%{transform:translateX(-100%)}} 
+
+/* REKAP NOTA BORDER */
+div[style*="border-left:4px solid"]{border-left:4px solid #42a5f5}
 </style>
 </head>
 <body>
 
-<!-- Audio -->
-<audio id="suaraKlik" src="https://www.soundjay.com/buttons/sounds/button-16.mp3" preload="auto"></audio>
-<audio id="suaraBayar" src="https://www.soundjay.com/buttons/sounds/button-3.mp3" preload="auto"></audio>
-<audio id="suaraTambah" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
-<audio id="suaraCetak" src="https://www.soundjay.com/buttons/sounds/button-09.mp3" preload="auto"></audio>
+<div class="marquee"><span id="runText">Loading...</span></div>
 
-<!-- Halaman Login -->
+<!-- LOGIN -->
 <div id="pageLogin" class="page active">
-  <div class="login-container">
-    <div class="header"><h2>Login RM JOYO</h2></div>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-    <div id="loginMsg" style="color:red;margin-top:5px;"></div>
+  <div class="card">
+    <div class="header"><h2>LOGIN KASIR</h2></div>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password (kosong untuk 55555)">
+    <button onclick="login()">MASUK</button>
   </div>
 </div>
 
-<!-- Halaman Kasir -->
+<!-- KASIR -->
 <div id="pageKasir" class="page">
-  <div class="kasir">
-    <div class="header"><h2>RM JOYO - Kasir</h2><div id="waktu"></div></div>
+  <div class="card">
+    <div class="header">
+      <h2 id="displayNamaToko"></h2>
+      <small id="waktu"></small>
+    </div>
     <div id="menuContainer"></div>
     <hr>
+    <h3 style="text-align:center;">Daftar Pesanan</h3>
     <div id="list"></div>
-    <button onclick="bayar()">Bayar</button>
-    <div class="total">Total: <span id="total">0</span></div>
-    <button onclick="showPage('pageRiwayat')">Lihat Riwayat / BOS</button>
-    <button onclick="showPage('pageRekap')">Lihat Rekap Per Nota</button>
-  </div>
-</div>
-
-<!-- Halaman Riwayat / BOS -->
-<div id="pageRiwayat" class="page">
-  <div class="riwayat-container">
-    <div class="header"><h2>RM JOYO - Riwayat & BOS (Per Tanggal)</h2></div>
-    <div id="inputMenu">
-      <input type="text" id="namaBaru" placeholder="Nama Menu">
-      <input type="number" id="hargaBaru" placeholder="Harga">
-      <select id="kategoriBaru">
-        <option value="Makanan">Makanan</option>
-        <option value="Minuman">Minuman</option>
-        <option value="Jajanan">Jajanan</option>
-      </select>
-      <button onclick="tambahMenuBaru()">Tambah</button>
+    <div style="text-align:center;font-weight:bold;font-size:20px;margin:15px 0;">
+      Total: Rp <span id="total">0</span>
     </div>
-    <button id="darkModeBtn" onclick="toggleDark()">Dark Mode: OFF</button>
-    <button id="autoPrintBtn" onclick="toggleAutoPrint()">Cetak Otomatis: OFF</button>
-    <button onclick="cetakManual()">Cetak Manual</button>
-    <button onclick="showPage('pageKasir')">Kembali ke Kasir</button>
-    <div id="riwayat"></div>
+    <button onclick="bayar()">BAYAR & SIMPAN NOTA</button>
+    <button style="background:#444;" onclick="showPage('pageRiwayat')">⚙ Pengaturan</button>
+    <button style="background:#444;" onclick="showPage('pageRekap')">📋 Rekap Nota</button>
   </div>
-</div><!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Running Text Kecil di Atas</title>
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    transition: background 0.5s;
-  }
-
-  .marquee-container {
-    width: 100%;
-    overflow: hidden;
-    white-space: nowrap;
-    padding: 0;       /* merapat ke atas */
-    margin: 0;        /* merapat ke atas */
-    font-size: 80%;   /* lebih kecil 80% */
-    font-weight: bold;
-    position: fixed;  /* tetap di atas layar */
-    top: 0;           /* posisi paling atas */
-    left: 0;
-    z-index: 1000;    /* selalu di atas elemen lain */
-  }
-
-  .marquee-text {
-    display: inline-block;
-    padding-left: 100%;
-    animation: scroll 15s linear infinite;
-  }
-
-  @keyframes scroll {
-    0% { transform: translateX(0%); }
-    100% { transform: translateX(-100%); }
-  }
-</style>
-</head>
-<body>
-
-<div class="marquee-container" id="marqueeContainer">
-  <div class="marquee-text" id="runningText">Loading...</div>
 </div>
 
-<script>
-  // Nama user otomatis
-  let userName = "KOES";
-
-  function getWaktu() {
-    const hour = new Date().getHours();
-    if(hour >= 4 && hour < 10) return "SELAMAT PAGI";
-    if(hour >= 10 && hour < 15) return "SELAMAT SIANG";
-    if(hour >= 15 && hour < 18) return "SELAMAT SORE";
-    return "SELAMAT MALAM";
-  }
-
-  function getColorsByHour() {
-    const hour = new Date().getHours();
-    if(hour >= 4 && hour < 10) return { background: "#FFFAAA", text: "#333" }; // pagi
-    if(hour >= 10 && hour < 15) return { background: "#87CEEB", text: "#fff" }; // siang
-    if(hour >= 15 && hour < 18) return { background: "#FFA500", text: "#000" }; // sore
-    return { background: "#2C3E50", text: "#fff" }; // malam
-  }
-
-  const runningTextEl = document.getElementById("runningText");
-
-  function updateRunningText() {
-    runningTextEl.textContent = `${getWaktu()}, ${userName}... SEMANGAT SEMOGA SUKSES`;
-
-    const colors = getColorsByHour();
-    document.body.style.background = colors.background;
-    runningTextEl.style.color = colors.text;
-  }
-
-  setInterval(updateRunningText, 1000);
-  updateRunningText();
-</script>
-
-</body>
-</html>
-
-<!-- Halaman Rekap Per Nota + Grand Total -->
-<div id="pageRekap" class="page">
-  <div class="rekap-container">
-    <div class="header"><h2>RM JOYO - Rekap Per Nota + Grand Total</h2></div>
+<!-- RIWAYAT / PENGATURAN -->
+<div id="pageRiwayat" class="page">
+  <div class="card">
+    <div class="header"><h3>⚙ Pengaturan Identitas</h3></div>
+    <input type="text" id="inputNamaToko" placeholder="Nama Toko">
+    <input type="text" id="inputNamaKasir" placeholder="Nama Kasir">
+    <button onclick="updateIdentitas()" style="background:#0288d1;">SIMPAN PERUBAHAN</button>
+    <hr>
+    <h3>Tambah Menu Baru</h3>
+    <input type="text" id="namaBaru" placeholder="Nama Menu">
+    <input type="number" id="hargaBaru" placeholder="Harga">
+    <select id="kategoriBaru">
+      <option value="Makanan">Makanan</option>
+      <option value="Minuman">Minuman</option>
+      <option value="Jajanan">Jajanan</option>
+    </select>
+    <button onclick="tambahMenuBaru()" style="background:#2e7d32;">Tambah Menu</button>
+    <button id="darkModeBtn" onclick="toggleDark()">Dark Mode</button>
+    <button onclick="resetRiwayat()" style="background:#d32f2f;">Hapus Semua Transaksi</button>
     <button onclick="showPage('pageKasir')">Kembali ke Kasir</button>
-    <button onclick="showPage('pageRiwayat')">Kembali ke Riwayat</button>
+    <div id="riwayat" style="margin-top:15px;border-top:1px solid #ccc;"></div>
+  </div>
+</div>
+
+<!-- REKAP -->
+<div id="pageRekap" class="page">
+  <div class="card">
+    <div class="header"><h2>NOTA PESAN</h2></div>
+    <button onclick="showPage('pageKasir')">Kembali ke Kasir</button>
     <div id="rekapDiv"></div>
   </div>
 </div>
 
 <script>
-// --- Data & Elemen ---
 let menuData = JSON.parse(localStorage.getItem("menuRM")) || [
   {nama:"Nasi Goreng",harga:15000,kategori:"Makanan"},
-  {nama:"Mie Goreng",harga:14000,kategori:"Makanan"},
-  {nama:"Ayam Goreng",harga:18000,kategori:"Makanan"},
-  {nama:"Teh",harga:5000,kategori:"Minuman"},
-  {nama:"Kopi",harga:7000,kategori:"Minuman"},
-  {nama:"Es Jeruk",harga:8000,kategori:"Minuman"},
-  {nama:"Gorengan",harga:10000,kategori:"Jajanan"}
+  {nama:"Teh Manis",harga:5000,kategori:"Minuman"},
+  {nama:"Krupuk",harga:2000,kategori:"Jajanan"}
 ];
-let pesananData=[], darkMode=JSON.parse(localStorage.getItem("darkMode"))||false, autoPrint=false;
-const menuContainer=document.getElementById("menuContainer"), list=document.getElementById("list"), totalEl=document.getElementById("total"), waktuEl=document.getElementById("waktu"), riwayatDiv=document.getElementById("riwayat"), rekapDiv=document.getElementById("rekapDiv"), darkBtn=document.getElementById("darkModeBtn"), autoBtn=document.getElementById("autoPrintBtn");
-const suaraKlik=document.getElementById("suaraKlik"), suaraBayar=document.getElementById("suaraBayar"), suaraTambah=document.getElementById("suaraTambah"), suaraCetak=document.getElementById("suaraCetak");
+let identitas = JSON.parse(localStorage.getItem("identitasRM")) || { toko:"RM JOYO", kasir:"KOES" };
+let pesananData = [], darkMode = JSON.parse(localStorage.getItem("darkMode")) || false;
 
-// --- Audio ---
-function playAudio(audio){ audio.currentTime=0; audio.play(); }
+function applyIdentitas(){
+  document.title = identitas.toko;
+  document.getElementById("displayNamaToko").innerText = identitas.toko;
+  document.getElementById("inputNamaToko").value = identitas.toko;
+  document.getElementById("inputNamaKasir").value = identitas.kasir;
+}
+applyIdentitas();
 
-// --- Login ---
-function login(){
-  const user=document.getElementById("username").value.trim();
-  const pass=document.getElementById("password").value.trim();
-  const loginMsg=document.getElementById("loginMsg"); loginMsg.innerText="";
-  const kasirPass=["3/3/2026 000","6/6/2026 0000","9/9/2026 00000"];
-  if((user==="kasir" && kasirPass.includes(pass)) || (user==="777") || (user==="bos" && pass==="2026-2027 M4t4h4r1")){
-    showPage("pageKasir"); playAudio(suaraKlik);
-  } else { loginMsg.innerText="Username atau Password salah!"; }
+if(darkMode) document.body.classList.add("dark");
+document.getElementById("darkModeBtn").innerText = darkMode ? "Dark Mode: ON" : "Dark Mode: OFF";
+
+function toggleDark(){
+  darkMode=!darkMode;
+  localStorage.setItem("darkMode",darkMode);
+  document.body.classList.toggle("dark");
+  document.getElementById("darkModeBtn").innerText=darkMode?"Dark Mode: ON":"Dark Mode: OFF";
 }
 
-// --- Halaman ---
+function updateWaktu(){
+  const d=new Date();
+  document.getElementById("waktu").innerText=d.toLocaleString('id-ID');
+  const jam=d.getHours();
+  let salam=jam<11?"PAGI":jam<15?"SIANG":jam<18?"SORE":"MALAM";
+  document.getElementById("runText").innerText=`${salam}, ${identitas.kasir.toUpperCase()} @ ${identitas.toko.toUpperCase()}... SEMANGAT! hub-087850876841`;
+}
+setInterval(updateWaktu,1000);
+
 function showPage(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -217,66 +158,84 @@ function showPage(id){
   if(id==='pageRekap') loadRekap();
 }
 
-// --- Dark Mode ---
-if(darkMode){document.body.classList.add("dark"); darkBtn.innerText="Dark Mode: ON";}
-function toggleDark(){darkMode=!darkMode; localStorage.setItem("darkMode",darkMode); document.body.classList.toggle("dark"); darkBtn.innerText=`Dark Mode: ${darkMode?'ON':'OFF'}`; playAudio(suaraKlik);}
-function toggleAutoPrint(){autoPrint=!autoPrint; autoBtn.innerText=`Cetak Otomatis: ${autoPrint?'ON':'OFF'}`; playAudio(suaraKlik);}
-
-// --- Waktu ---
-function updateWaktu(){const d=new Date(); waktuEl.innerText = `${d.toLocaleDateString('id-ID',{weekday:'long'})}, ${d.getDate().toString().padStart(2,'0')} ${d.toLocaleDateString('id-ID',{month:'long'})} ${d.getFullYear()} | ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;}
-setInterval(updateWaktu,1000); updateWaktu();
-
-// --- Render Menu ---
-function renderMenu(){menuContainer.innerHTML=""; ["Makanan","Minuman","Jajanan"].forEach(kat=>{const catMenus = menuData.filter(m=>m.kategori===kat); if(catMenus.length>0){const title=document.createElement("div"); title.className="kategori-title"; title.innerText=kat; menuContainer.appendChild(title); catMenus.forEach(m=>{const div=document.createElement("div"); div.className="menu-item"; div.innerHTML=`<span>${m.nama}</span><span>Rp ${m.harga.toLocaleString('id-ID')}</span>`; div.onclick=()=>{ tambah(m.nama,m.harga); playAudio(suaraKlik); }; menuContainer.appendChild(div); });}});}
-renderMenu();
-
-// --- Pesanan ---
-function tambah(n,h){let item=pesananData.find(x=>x.nama===n); if(item){item.jumlah++;}else{pesananData.push({nama:n,harga:h,jumlah:1});} renderPesanan();}
-function renderPesanan(){list.innerHTML=""; let total=0; pesananData.forEach((p,i)=>{const div=document.createElement("div"); div.className="order"; div.innerHTML=`<span>${p.nama} x${p.jumlah}</span><span class="rp">Rp ${(p.harga*p.jumlah).toLocaleString('id-ID')}</span><span class="hapusOrder">✖</span>`; div.querySelector(".hapusOrder").onclick=()=>{if(confirm(`Hapus pesanan ${p.nama}?`)){pesananData.splice(i,1); renderPesanan(); playAudio(suaraKlik);}}; list.appendChild(div); total+=p.harga*p.jumlah;}); totalEl.innerText=total.toLocaleString('id-ID');}
-
-// --- Bayar ---
-function bayar(){
-  if(pesananData.length===0){alert("Belum ada pesanan!"); return;}
-  playAudio(suaraBayar);
-  let total=pesananData.reduce((a,b)=>a+b.harga*b.jumlah,0);
-  const riwayat=JSON.parse(localStorage.getItem("riwayatRM"))||[];
-  riwayat.push({waktu:new Date().toISOString(), total, pesanan:pesananData});
-  localStorage.setItem("riwayatRM",JSON.stringify(riwayat));
-  pesananData=[]; renderPesanan();
-  showPage('pageRekap'); 
-  loadRekap(true); // scroll ke bawah
+function login(){
+  const u=document.getElementById("username").value.trim();
+  const p=document.getElementById("password").value.trim();
+  
+  if(u==="55555"){ showPage("pageKasir"); renderMenu(); return; }
+  if((u==="kasir" && p==="000")||(u==="bos" && p==="777")){ showPage("pageKasir"); renderMenu(); }
+  else alert("Login Gagal!");
 }
 
-// --- Tambah Menu Baru ---
-function tambahMenuBaru(){const nama=document.getElementById("namaBaru").value.trim(); const harga=parseInt(document.getElementById("hargaBaru").value); const kategori=document.getElementById("kategoriBaru").value; if(nama===""||isNaN(harga)||harga<=0){alert("Isi nama dan harga dengan benar!"); return;} menuData.push({nama,harga,kategori}); localStorage.setItem("menuRM",JSON.stringify(menuData)); renderMenu(); document.getElementById("namaBaru").value=""; document.getElementById("hargaBaru").value=""; playAudio(suaraTambah); alert(`Menu "${nama}" berhasil ditambahkan ke kategori ${kategori}!`);}
-
-// --- Riwayat per tanggal ---
-function loadRiwayat(){const riwayat = JSON.parse(localStorage.getItem("riwayatRM"))||[]; riwayatDiv.innerHTML=""; if(riwayat.length===0){riwayatDiv.innerHTML="Belum ada transaksi"; return;}
-const perTanggal = {}; riwayat.forEach(t=>{const tanggal=new Date(t.waktu).toLocaleDateString('id-ID'); if(!perTanggal[tanggal]) perTanggal[tanggal]=[]; perTanggal[tanggal].push(t);});
-for(const [tanggal, transaksiList] of Object.entries(perTanggal)){riwayatDiv.innerHTML+=`<div style="margin-top:10px; font-weight:bold;">Tanggal: ${tanggal}</div>`; let itemTotals={}, totalHari=0; transaksiList.forEach(t=>{t.pesanan.forEach(p=>{if(!itemTotals[p.nama]) itemTotals[p.nama]={jumlah:0,subtotal:0}; itemTotals[p.nama].jumlah+=p.jumlah; itemTotals[p.nama].subtotal+=p.harga*p.jumlah; totalHari+=p.harga*p.jumlah;});}); for(const [nama,data] of Object.entries(itemTotals)){riwayatDiv.innerHTML+=`<div style="margin-left:20px;">${nama}: ${data.jumlah} porsi - Rp ${data.subtotal.toLocaleString('id-ID')}</div>`;} riwayatDiv.innerHTML+=`<b style="margin-left:20px;">Total Hari Ini: Rp ${totalHari.toLocaleString('id-ID')}</b><hr>`;}
-riwayatDiv.scrollTop = riwayatDiv.scrollHeight; if(autoPrint){ playAudio(suaraCetak);}
+function updateIdentitas(){
+  identitas.toko=document.getElementById("inputNamaToko").value||"RM JOYO";
+  identitas.kasir=document.getElementById("inputNamaKasir").value||"KOES";
+  localStorage.setItem("identitasRM",JSON.stringify(identitas));
+  applyIdentitas();
+  alert("Identitas berhasil diperbarui!");
 }
 
-// --- Rekap per nota + Grand Total ---
-function loadRekap(scrollToBottom=false){
-  const riwayat = JSON.parse(localStorage.getItem("riwayatRM"))||[];
-  rekapDiv.innerHTML=""; if(riwayat.length===0){rekapDiv.innerHTML="Belum ada transaksi"; return;}
-  let grandTotal=0;
-  riwayat.forEach((t,i)=>{
-    const waktu=new Date(t.waktu).toLocaleString('id-ID');
-    rekapDiv.innerHTML+=`<div style="margin-bottom:10px;"><b>Nota #${i+1} - ${waktu}</b><ul>`;
-    t.pesanan.forEach(p=>{
-      rekapDiv.innerHTML+=`<li>${p.nama} x${p.jumlah} <span style="float:right;">Rp ${(p.harga*p.jumlah).toLocaleString('id-ID')}</span></li>`;
-    });
-    rekapDiv.innerHTML+=`</ul><b>Total Nota: Rp ${t.total.toLocaleString('id-ID')}</b><hr></div>`;
-    grandTotal+=t.total;
+function renderMenu(){
+  const container=document.getElementById("menuContainer");container.innerHTML="";
+  ["Makanan","Minuman","Jajanan"].forEach(kat=>{
+    const list=menuData.filter(m=>m.kategori===kat);
+    if(list.length){container.innerHTML+=`<div class="kategori">${kat}</div>`;
+      list.forEach((m)=>{
+        const item=document.createElement("div");
+        item.className="menu-item";
+        item.innerHTML=`<div class="menu-info" onclick="tambahItem('${m.nama}',${m.harga})"><span>${m.nama}</span><span>Rp ${m.harga.toLocaleString()}</span></div><div class="del" onclick="hapusMenuMaster(event,'${m.nama}')">✖</div>`;
+        container.appendChild(item);
+      });
+    }
   });
-  rekapDiv.innerHTML+=`<div style="text-align:center; font-weight:bold; font-size:18px;">Grand Total Semua Nota: Rp ${grandTotal.toLocaleString('id-ID')}</div>`;
-  if(scrollToBottom){setTimeout(()=>{rekapDiv.scrollTop = rekapDiv.scrollHeight;}, 100);}
 }
 
-// --- Cetak Manual ---
-function cetakManual(){playAudio(suaraCetak); loadRiwayat();}
+// Menu tambah/hapus
+function tambahMenuBaru(){const n=document.getElementById("namaBaru").value;const h=parseInt(document.getElementById("hargaBaru").value);if(!n||!h)return alert("Nama & Harga harus diisi!");menuData.push({nama:n,harga:h,kategori:document.getElementById("kategoriBaru").value});localStorage.setItem("menuRM",JSON.stringify(menuData));renderMenu();document.getElementById("namaBaru").value="";document.getElementById("hargaBaru").value="";}
+function hapusMenuMaster(e,nama){e.stopPropagation();if(confirm(`Hapus menu "${nama}"?`)){menuData=menuData.filter(m=>m.nama!==nama);localStorage.setItem("menuRM",JSON.stringify(menuData));renderMenu();}}
+function tambahItem(n,h){let ada=pesananData.find(x=>x.nama===n);if(ada)ada.jumlah++;else pesananData.push({nama:n,harga:h,jumlah:1});renderPesanan();}
+function renderPesanan(){const list=document.getElementById("list");list.innerHTML="";let total=0;pesananData.forEach((p,i)=>{total+=p.harga*p.jumlah;list.innerHTML+=`<div class="order"><div style="flex:2;"><b>${p.nama}</b> (${p.jumlah} x Rp ${p.harga.toLocaleString()})</div><div style="flex:1;text-align:right;">Rp ${(p.harga*p.jumlah).toLocaleString()}</div><div class="del" onclick="hapusSatu(${i})">✖</div></div>`;});document.getElementById("total").innerText=total.toLocaleString();}
+function hapusSatu(i){pesananData.splice(i,1);renderPesanan();}
+function bayar(){if(pesananData.length===0)return alert("Pilih menu dulu!");const riwayat=JSON.parse(localStorage.getItem("riwayatRM")||"[]");const total=pesananData.reduce((a,b)=>a+b.harga*b.jumlah,0);riwayat.push({waktu:new Date().toISOString(),pesanan:[...pesananData],total,kasir:identitas.kasir});localStorage.setItem("riwayatRM",JSON.stringify(riwayat));pesananData=[];renderPesanan();alert("Nota berhasil disimpan!");}
+
+// Gradient berubah tiap 1 jam
+const gradients = [
+  "linear-gradient(90deg, #ffffff, #ffeb3b, #e91e63)",
+  "linear-gradient(90deg, #ff5722, #4caf50, #2196f3)",
+  "linear-gradient(90deg, #9c27b0, #ffeb3b, #03a9f4)",
+  "linear-gradient(90deg, #f44336, #ff9800, #ffff00)"
+];
+let gradIndex = 0;
+function ubahGradient(){
+  gradIndex = (gradIndex + 1) % gradients.length;
+  document.getElementById("displayNamaToko").style.background = gradients[gradIndex];
+}
+setInterval(ubahGradient, 3600000); // tiap 1 jam
+
+// Riwayat & Rekap
+function loadRiwayat(){
+  const riwayat=JSON.parse(localStorage.getItem("riwayatRM")||"[]");
+  const div=document.getElementById("riwayat");div.innerHTML="<h4>Laporan Terjual Per Item per Tanggal:</h4>";
+  let laporan={};
+  riwayat.forEach(nota=>{
+    const tgl=new Date(nota.waktu).toLocaleDateString('id-ID');
+    if(!laporan[tgl]) laporan[tgl]={};
+    nota.pesanan.forEach(p=>{laporan[tgl][p.nama]=(laporan[tgl][p.nama]||0)+p.jumlah;});
+  });
+  for(let tgl in laporan){
+    div.innerHTML+=`<h5>${tgl}</h5>`;
+    for(let item in laporan[tgl]){
+      div.innerHTML+=`<div>${item}: <b>${laporan[tgl][item]} terjual</b></div>`;
+    }
+    div.innerHTML+="<hr>";
+  }
+}
+function resetRiwayat(){if(confirm("Hapus semua riwayat?")){localStorage.removeItem("riwayatRM"); loadRiwayat(); loadRekap();}}
+function loadRekap(){
+  const riwayat=JSON.parse(localStorage.getItem("riwayatRM")||"[]");const div=document.getElementById("rekapDiv");div.innerHTML="";let gt=0;
+  riwayat.slice().reverse().forEach((n,i)=>{gt+=n.total;let items=n.pesanan.map(p=>`<li>${p.nama} x${p.jumlah}</li>`).join("");div.innerHTML+=`<div style="background:#fff;color:#000;padding:10px;margin-bottom:10px;border-radius:8px;border-left:4px solid #42a5f5;"><b>Nota #${riwayat.length-i}</b> - ${new Date(n.waktu).toLocaleTimeString()}<br><small>Kasir: ${n.kasir}</small><ul style="margin:5px 0;">${items}</ul><b>Total: Rp ${n.total.toLocaleString()}</b></div>`;});
+  div.innerHTML=`<h3 style="text-align:center;">TOTAL OMZET: Rp ${gt.toLocaleString()}</h3>`+div.innerHTML;
+}
 </script>
 </body>
-l
+</html>
